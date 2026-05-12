@@ -18,7 +18,7 @@ export default async function GuiaDaFePage() {
       <header className="mb-5">
         <h1 className="text-2xl md:text-3xl font-serif text-amber-500">Guia da Fé</h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Seu rastreador diário de práticas espirituais.
+          O Guia da Fé é o seu acompanhamento diário de disciplinas espirituais. Marque cada prática que você realizou no dia — oração, estudo da Bíblia, louvor, jejum, pregação, culto e evangelismo — e acompanhe o seu crescimento ao longo do mês. Pequenos hábitos praticados todos os dias constroem uma fé sólida e transformadora! 🙏
         </p>
       </header>
 

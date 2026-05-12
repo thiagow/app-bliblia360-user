@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  plan          String    @default("BASIC")
+  firstAccess   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model PdfDocument {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  fileUrl     String   
+  coverUrl    String?  
+  planAccess  String   @default("BASIC")
+  isBonus     Boolean  @default(false)
+  d7Rule      Boolean  @default(false) 
+  createdAt   DateTime @default(now())
+}
+
+model Devotional {
+  id          String   @id @default(cuid())
+  userId      String
+  text        String   
+  mood        String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GuiaDaFe {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  videoUrl    String?
+  order       Int      @default(0) 
+  planAccess  String   @default("BASIC")
+  isBonus     Boolean  @default(false)
+  d7Rule      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model UserProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  guiaDaFeId  String
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  @@unique([userId, guiaDaFeId])
+}

@@ -63,7 +63,8 @@ export async function GET(
     // O uso de ByteArray garante que toda a resposta será enviada sem depender de suporte a Streams no Lambda da Netlify
     const byteArray = await response.Body.transformToByteArray()
 
-    return new NextResponse(byteArray, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return new NextResponse(byteArray as any, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="${params.slug}.pdf"`,

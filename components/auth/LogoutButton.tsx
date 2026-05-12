@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button"
 
 export function LogoutButton() {
   const handleLogout = async () => {
-    // signOut client-side limpa a sessão corretamente
-    await signOut({ redirect: false })
-    // Hard navigation limpa os estados do cliente e força nova requisição sem cookie
-    window.location.href = "/login"
+    // Usamos o redirecionamento nativo do next-auth para garantir que
+    // o cookie de sessão seja removido via HTTP response antes de navegar.
+    await signOut({ callbackUrl: "/login" })
   }
 
   return (

@@ -9,17 +9,25 @@ const publicRoutes = ["/login", "/api/auth", "/api/health", "/api/logout"]
 
 export default auth((req) => {
   const session = req.auth
-  const { pathname } = req.nextUrl
+  const { pathname, searchParams } = req.nextUrl
 
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   )
 
+  // Not logged in + private route → go to login
   if (!session && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
+  // Logged in + visiting /login → redirect to /home
+  // EXCEPT when signedOut=1 (coming from /api/logout) — let them through
   if (session && pathname === "/login") {
+    if (searchParams.get("signedOut") === "1") {
+      // User just signed out. Even if cookie deletion had a race condition,
+      // we let them through to the login page. The cookie will expire naturally.
+      return NextResponse.next()
+    }
     return NextResponse.redirect(new URL("/home", req.url))
   }
 

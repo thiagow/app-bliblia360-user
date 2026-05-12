@@ -2,15 +2,14 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
-  const url = new URL(request.url)
-  const response = NextResponse.redirect(new URL("/login", url.origin), {
-    // 303 See Other força o browser a fazer GET em /login
-    status: 303,
-  })
+  // Redireciona para /login?signedOut=1 — o middleware aceita esse query param
+  const loginUrl = new URL("/login", request.url)
+  loginUrl.searchParams.set("signedOut", "1")
+
+  const response = NextResponse.redirect(loginUrl, { status: 303 })
 
   // Todos os possíveis nomes de cookie do next-auth v5 / Auth.js
-  // O prefixo muda conforme o protocolo: HTTP = "authjs.", HTTPS = "__Secure-authjs."
-  const cookiesToDelete = [
+  const cookieNames = [
     "authjs.session-token",
     "__Secure-authjs.session-token",
     "authjs.csrf-token",
@@ -26,15 +25,18 @@ export async function GET(request: NextRequest) {
     "__Secure-next-auth.callback-url",
   ]
 
-  for (const name of cookiesToDelete) {
-    // Deleta setando expiração no passado em todas as variações de path/domain
+  for (const name of cookieNames) {
+    const isSecurePrefixed = name.startsWith("__Secure-") || name.startsWith("__Host-")
+
+    // Deleta com secure: true (match cookies HTTPS da Netlify)
     response.cookies.set(name, "", {
       expires: new Date(0),
       maxAge: 0,
       path: "/",
       httpOnly: true,
       sameSite: "lax",
-      secure: url.protocol === "https:",
+      // SEMPRE true para cookies __Secure-/__Host- — obrigatório pela spec
+      secure: isSecurePrefixed ? true : false,
     })
   }
 

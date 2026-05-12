@@ -4,9 +4,14 @@ import { signIn } from "@/lib/auth"
 import { AuthError } from "next-auth"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
-export async function loginAction(formData: FormData) {
+export type AuthState = { error: string | null }
+
+export async function loginAction(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
@@ -20,21 +25,32 @@ export async function loginAction(formData: FormData) {
       password,
       redirect: false,
     })
-    return { success: true }
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
           return { error: "Email ou senha incorretos." }
         default:
+          console.error("[loginAction] AuthError:", error.type, error.message)
           return { error: `Erro de autenticação: ${error.type}` }
       }
     }
-    // Captura erros de banco de dados ou Prisma e retorna mensagem legível
     const message = error instanceof Error ? error.message : "Erro desconhecido"
     console.error("[loginAction] Unexpected error:", message)
-    return { error: `Erro interno ao realizar login. Tente novamente.` }
+    return { error: "Erro interno ao realizar login. Tente novamente." }
   }
+
+  // Credentials valid — check firstAccess to determine redirect
+  try {
+    const user = await db.user.findUnique({ where: { email } })
+    if (user?.firstAccess) {
+      redirect("/change-password")
+    }
+  } catch {
+    // If DB check fails, just go to home
+  }
+
+  redirect("/home")
 }
 
 export async function changePasswordAction(formData: FormData) {
@@ -57,10 +73,9 @@ export async function changePasswordAction(formData: FormData) {
     data: {
       password: hashedPassword,
       firstAccess: false,
-    }
+    },
   })
 
-  // Atualiza a sessão (JWT cookie) logando o usuário novamente com a nova senha
   try {
     await signIn("credentials", {
       email: user.email,
@@ -73,7 +88,5 @@ export async function changePasswordAction(formData: FormData) {
     return { error: "Senha alterada, mas erro ao atualizar a sessão. Faça login novamente." }
   }
 
-  revalidatePath("/")
-
-  return { success: true }
+  redirect("/home")
 }

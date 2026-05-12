@@ -81,7 +81,7 @@ export function DaySheet({ date, initialPractices, onClose, onSaved }: Props) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         aria-hidden="true"
@@ -92,7 +92,7 @@ export function DaySheet({ date, initialPractices, onClose, onSaved }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={date ? `Registro de ${formatDate(date)}` : "Registro diário"}
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 border-t border-zinc-700/50 rounded-t-3xl shadow-2xl transition-transform duration-400 ease-out
+        className={`fixed bottom-0 left-0 right-0 z-[60] bg-zinc-900 border-t border-zinc-700/50 rounded-t-3xl shadow-2xl transition-transform duration-400 ease-out
           ${isOpen ? "translate-y-0" : "translate-y-full"}
         `}
       >
@@ -173,7 +173,7 @@ export function DaySheet({ date, initialPractices, onClose, onSaved }: Props) {
         </div>
 
         {/* Save button */}
-        <div className="px-4 pb-8 pt-2">
+        <div className="px-4 pb-12 pt-2">
           <button
             onClick={handleSave}
             disabled={isPending}

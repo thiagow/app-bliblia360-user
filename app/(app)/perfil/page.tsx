@@ -1,7 +1,7 @@
-import { auth, signOut } from "@/lib/auth"
-import { Button } from "@/components/ui/button"
+import { auth } from "@/lib/auth"
 import Link from "next/link"
 import { Gift } from "lucide-react"
+import { LogoutButton } from "@/components/auth/LogoutButton"
 
 export default async function PerfilPage() {
   const session = await auth()
@@ -48,14 +48,7 @@ export default async function PerfilPage() {
         </div>
       </div>
 
-      <form
-        action={async () => {
-          "use server"
-          await signOut({ redirectTo: "/login" })
-        }}
-      >
-        <Button variant="destructive" className="w-full h-12 md:h-10 md:w-auto text-base md:text-sm">Sair da Conta</Button>
-      </form>
+      <LogoutButton />
     </div>
   )
 }

@@ -5,6 +5,8 @@ export const authConfig = {
     signIn: "/login",
   },
   session: { strategy: "jwt" },
+  // Required for non-Vercel deployments (Netlify, Railway, etc.)
+  trustHost: true,
   providers: [],
   callbacks: {
     async jwt({ token, user, trigger, session }) {

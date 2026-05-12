@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 const { auth } = NextAuth(authConfig)
 
 // Public routes that don't require authentication
-const publicRoutes = ["/login", "/api/auth", "/api/health"]
+const publicRoutes = ["/login", "/api/auth", "/api/health", "/api/logout"]
 
 export default auth((req) => {
   const session = req.auth

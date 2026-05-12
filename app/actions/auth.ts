@@ -25,12 +25,15 @@ export async function loginAction(formData: FormData) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Credenciais inválidas." }
+          return { error: "Email ou senha incorretos." }
         default:
-          return { error: "Erro ao realizar login." }
+          return { error: `Erro de autenticação: ${error.type}` }
       }
     }
-    throw error; // required for NextAuth redirects to work correctly if redirect was true, but we use redirect: false
+    // Captura erros de banco de dados ou Prisma e retorna mensagem legível
+    const message = error instanceof Error ? error.message : "Erro desconhecido"
+    console.error("[loginAction] Unexpected error:", message)
+    return { error: `Erro interno ao realizar login. Tente novamente.` }
   }
 }
 
@@ -65,10 +68,9 @@ export async function changePasswordAction(formData: FormData) {
       redirect: false,
     })
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Erro ao atualizar a sessão." }
-    }
-    throw error;
+    const message = error instanceof Error ? error.message : "Erro desconhecido"
+    console.error("[changePasswordAction] signIn error:", message)
+    return { error: "Senha alterada, mas erro ao atualizar a sessão. Faça login novamente." }
   }
 
   revalidatePath("/")

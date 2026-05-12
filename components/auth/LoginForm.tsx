@@ -1,7 +1,7 @@
 "use client"
 
-import { useFormState, useFormStatus } from "react-dom"
-import { loginAction, type AuthState } from "@/app/actions/auth"
+import { useState } from "react"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,23 +13,41 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  return (
-    <Button
-      type="submit"
-      className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-      disabled={pending}
-    >
-      {pending ? "Entrando..." : "Entrar"}
-    </Button>
-  )
-}
-
-const initialState: AuthState = { error: null }
-
 export function LoginForm() {
-  const [state, formAction] = useFormState(loginAction, initialState)
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    setIsPending(true)
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/home",
+      })
+
+      if (!result || result.error) {
+        setError("Email ou senha incorretos.")
+        setIsPending(false)
+        return
+      }
+
+      // Hard navigation garante que o cookie de sessão é enviado com o próximo request
+      window.location.href = result.url ?? "/home"
+    } catch (err) {
+      console.error("[LoginForm] signIn error:", err)
+      setError("Erro interno. Tente novamente.")
+      setIsPending(false)
+    }
+  }
 
   return (
     <Card className="bg-zinc-900 border-zinc-800 text-zinc-100">
@@ -40,7 +58,7 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -49,6 +67,7 @@ export function LoginForm() {
               type="email"
               placeholder="seu@email.com"
               required
+              autoComplete="email"
               className="bg-zinc-950 border-zinc-800 focus-visible:ring-amber-500"
             />
           </div>
@@ -59,13 +78,18 @@ export function LoginForm() {
               name="password"
               type="password"
               required
+              autoComplete="current-password"
               className="bg-zinc-950 border-zinc-800 focus-visible:ring-amber-500"
             />
           </div>
-          {state?.error && (
-            <p className="text-red-500 text-sm">{state.error}</p>
-          )}
-          <SubmitButton />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <Button
+            type="submit"
+            className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+            disabled={isPending}
+          >
+            {isPending ? "Entrando..." : "Entrar"}
+          </Button>
         </form>
       </CardContent>
     </Card>

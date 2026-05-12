@@ -1,43 +1,36 @@
-import { NextResponse, NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
+import NextAuth from "next-auth"
+import { authConfig } from "./auth.config"
+import { NextResponse } from "next/server"
 
+const { auth } = NextAuth(authConfig)
+
+// Public routes that don't require authentication
 const publicRoutes = ["/login", "/api/auth", "/api/health"]
 
-export async function middleware(req: NextRequest) {
+export default auth((req) => {
+  const session = req.auth
   const { pathname } = req.nextUrl
 
-  // Never block Next.js Server Actions (they POST to the same page)
-  const isServerAction = req.method === "POST" && req.headers.get("next-action") !== null
-  if (isServerAction) {
-    return NextResponse.next()
-  }
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  )
 
-  // Allow public API routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.next()
-  }
-
-  // Check session via JWT token directly (works in Edge Runtime)
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  })
-
-  // Not authenticated - redirect to login
-  if (!token) {
+  if (!session && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
-  // Authenticated and on login page - redirect to home
-  if (pathname === "/login") {
+  if (session && pathname === "/login") {
     return NextResponse.redirect(new URL("/home", req.url))
   }
 
-  // First access logic
-  if (token) {
-    const firstAccess = token.firstAccess as boolean | undefined
+  if (session) {
+    const { firstAccess } = session.user as any
 
-    if (firstAccess && pathname !== "/change-password" && !pathname.startsWith("/api/")) {
+    if (
+      firstAccess &&
+      pathname !== "/change-password" &&
+      !pathname.startsWith("/api/")
+    ) {
       return NextResponse.redirect(new URL("/change-password", req.url))
     }
 
@@ -47,7 +40,7 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next()
-}
+})
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],

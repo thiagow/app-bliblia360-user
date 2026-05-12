@@ -60,12 +60,10 @@ export async function GET(
       return new NextResponse("File not found on R2", { status: 404 })
     }
 
-    // Convert the stream to a Web ReadableStream for NextResponse
-    // Since AWS SDK v3 in Node.js returns a Readable, we can cast it to any and Next.js handles it.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stream = response.Body as any
+    // O uso de ByteArray garante que toda a resposta será enviada sem depender de suporte a Streams no Lambda da Netlify
+    const byteArray = await response.Body.transformToByteArray()
 
-    return new NextResponse(stream, {
+    return new NextResponse(byteArray, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="${params.slug}.pdf"`,

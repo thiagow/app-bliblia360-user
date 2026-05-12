@@ -76,17 +76,6 @@ export async function changePasswordAction(formData: FormData) {
     },
   })
 
-  try {
-    await signIn("credentials", {
-      email: user.email,
-      password: password,
-      redirect: false,
-    })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro desconhecido"
-    console.error("[changePasswordAction] signIn error:", message)
-    return { error: "Senha alterada, mas erro ao atualizar a sessão. Faça login novamente." }
-  }
-
-  redirect("/home")
+  // Retorna email e nova senha para o cliente re-autenticar via next-auth/react
+  return { success: true, email: user.email, newPassword: password }
 }
